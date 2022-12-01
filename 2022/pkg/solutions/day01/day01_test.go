@@ -39,12 +39,22 @@ func TestParser(t *testing.T) {
 	}
 }
 
-func TestDay01Part1(t *testing.T) {
-	sol, err := day01.Day01Part1(sampleInput)
+func TestPart1(t *testing.T) {
+	sol, err := day01.Part1(sampleInput)
 	if err != nil {
 		t.Errorf("Did not expect error: %v", err)
 	}
 	if sol.Message != "Max Calories are 24000" {
+		t.Errorf("Wrong solution: %v", sol)
+	}
+}
+
+func TestPart2(t *testing.T) {
+	sol, err := day01.Part2(sampleInput)
+	if err != nil {
+		t.Errorf("Did not expect error: %v", err)
+	}
+	if sol.Message != "Total Calories carried by top three elves are 45000" {
 		t.Errorf("Wrong solution: %v", sol)
 	}
 }

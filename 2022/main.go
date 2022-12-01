@@ -46,5 +46,8 @@ func main() {
 	}
 	defer data.Close()
 
-	days[*day].Run(data, *part-1)
+	err = days[*day].Run(data, *part-1)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 }
