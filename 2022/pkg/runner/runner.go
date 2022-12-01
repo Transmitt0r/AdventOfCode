@@ -11,16 +11,18 @@ type Solution struct {
 }
 
 type Runner struct {
-	Runnable func([]byte) (Solution, error)
+	Runnables []Runnable
 }
 
-func (d Runner) Run(input io.Reader) error {
+type Runnable func([]byte) (Solution, error)
+
+func (d Runner) Run(input io.Reader, partSelect int) error {
 	var data = bytes.NewBuffer(nil)
 	_, err := io.Copy(data, input)
 	if err != nil {
 		return err
 	}
-	solution, err := d.Runnable(data.Bytes())
+	solution, err := d.Runnables[partSelect](data.Bytes())
 	if err != nil {
 		return err
 	}
