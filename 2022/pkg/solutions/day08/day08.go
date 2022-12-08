@@ -18,116 +18,72 @@ func (f Forest) Size() (int, int) {
 	return len(f.heights[0]), len(f.heights)
 }
 
-func (f Forest) IsVisible(x, y int) bool {
+func (f Forest) IsVisibleWithScore(x, y int) (bool, int) {
 	if x == 0 || x == len(f.heights[y])-1 || y == 0 || y == len(f.heights[x])-1 {
 		// on the edge
-		return true
-	}
-	treeHeight := f.heights[y][x]
-	// check north
-	isVisibleNorth := true
-	for yIter := y - 1; yIter >= 0; yIter-- {
-		otherTree := f.heights[yIter][x]
-		if otherTree >= treeHeight {
-			isVisibleNorth = false
-			break
-		}
-	}
-	// check east
-	isVisibleEast := true
-	for xIter := x + 1; xIter < len(f.heights[y]); xIter++ {
-		otherTree := f.heights[y][xIter]
-		if otherTree >= treeHeight {
-			isVisibleEast = false
-			break
-		}
-	}
-	// check south
-	isVisibleSouth := true
-	for yIter := y + 1; yIter < len(f.heights); yIter++ {
-		otherTree := f.heights[yIter][x]
-		if otherTree >= treeHeight {
-			isVisibleSouth = false
-			break
-		}
-	}
-	// check west
-	isVisibleWest := true
-	for xIter := x - 1; xIter >= 0; xIter-- {
-		otherTree := f.heights[y][xIter]
-		if otherTree >= treeHeight {
-			isVisibleWest = false
-			break
-		}
-	}
-
-	return isVisibleNorth || isVisibleEast || isVisibleSouth || isVisibleWest
-}
-
-func (f Forest) ScenicScore(x, y int) int {
-	if x == 0 || x == len(f.heights[y])-1 || y == 0 || y == len(f.heights[x])-1 {
-		// on the edge
-		return 0
+		return true, 0
 	}
 	treeHeight := f.heights[y][x]
 	// check north
 	var northDistance int
-	var foundNorthTree bool
+	isVisibleNorth := true
 	for yIter := y - 1; yIter >= 0; yIter-- {
 		otherTree := f.heights[yIter][x]
 		if otherTree >= treeHeight {
 			northDistance = y - yIter
-			foundNorthTree = true
+			isVisibleNorth = false
 			break
 		}
 	}
-	if !foundNorthTree {
+	if isVisibleNorth {
 		northDistance = y
 	}
 	// check east
 	var eastDistance int
-	var foundEastTree bool
+	isVisibleEast := true
 	for xIter := x + 1; xIter < len(f.heights[y]); xIter++ {
 		otherTree := f.heights[y][xIter]
 		if otherTree >= treeHeight {
 			eastDistance = xIter - x
-			foundEastTree = true
+			isVisibleEast = false
 			break
 		}
 	}
-	if !foundEastTree {
+	if isVisibleEast {
 		eastDistance = len(f.heights[y]) - x - 1
 	}
 	// check south
 	var southDistance int
-	var foundSouthTree bool
+	isVisibleSouth := true
 	for yIter := y + 1; yIter < len(f.heights); yIter++ {
 		otherTree := f.heights[yIter][x]
 		if otherTree >= treeHeight {
 			southDistance = yIter - y
-			foundSouthTree = true
+			isVisibleSouth = false
 			break
 		}
 	}
-	if !foundSouthTree {
+	if isVisibleSouth {
 		southDistance = len(f.heights) - y - 1
 	}
 	// check west
 	var westDistance int
-	var foundWestTree bool
+	isVisibleWest := true
 	for xIter := x - 1; xIter >= 0; xIter-- {
 		otherTree := f.heights[y][xIter]
 		if otherTree >= treeHeight {
 			westDistance = x - xIter
-			foundWestTree = true
+			isVisibleWest = false
 			break
 		}
 	}
-	if !foundWestTree {
+	if isVisibleWest {
 		westDistance = x
 	}
 
-	return northDistance * eastDistance * southDistance * westDistance
+	scenicScore := northDistance * eastDistance * southDistance * westDistance
+	isVisible := isVisibleNorth || isVisibleEast || isVisibleSouth || isVisibleWest
+	return isVisible, scenicScore
 }
 
 func Part1(input []byte) (runner.Solution, error) {
@@ -137,7 +93,8 @@ func Part1(input []byte) (runner.Solution, error) {
 	visibleTrees := 0
 	for y := 0; y < ySize; y++ {
 		for x := 0; x < xSize; x++ {
-			if p.IsVisible(x, y) {
+			isVisible, _ := p.IsVisibleWithScore(x, y)
+			if isVisible {
 				visibleTrees++
 			}
 		}
@@ -153,7 +110,7 @@ func Part2(input []byte) (runner.Solution, error) {
 	maxScenicScore := 0
 	for y := 0; y < ySize; y++ {
 		for x := 0; x < xSize; x++ {
-			score := p.ScenicScore(x, y)
+			_, score := p.IsVisibleWithScore(x, y)
 			if score > maxScenicScore {
 				maxScenicScore = score
 			}
