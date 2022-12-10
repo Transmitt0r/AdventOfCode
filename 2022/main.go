@@ -17,6 +17,7 @@ import (
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day07"
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day08"
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day09"
+	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day10"
 )
 
 var (
@@ -42,16 +43,17 @@ func main() {
 		log.Fatalf("Invalid Part: %v, Please select part 1 or 2", *part)
 	}
 	days := map[int]Day{
-		0: day00.Solution,
-		1: day01.Solution,
-		2: day02.Solution,
-		3: day03.Solution,
-		4: day04.Solution,
-		5: day05.Solution,
-		6: day06.Solution,
-		7: day07.Solution,
-		8: day08.Solution,
-		9: day09.Solution,
+		0:  day00.Solution,
+		1:  day01.Solution,
+		2:  day02.Solution,
+		3:  day03.Solution,
+		4:  day04.Solution,
+		5:  day05.Solution,
+		6:  day06.Solution,
+		7:  day07.Solution,
+		8:  day08.Solution,
+		9:  day09.Solution,
+		10: day10.Solution,
 	}
 	if _, ok := days[*day]; !ok {
 		log.Fatalln("Selected invalid day!")
