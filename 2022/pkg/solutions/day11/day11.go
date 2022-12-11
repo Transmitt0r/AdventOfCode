@@ -3,70 +3,13 @@ package day11
 import (
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/runner"
 )
 
 var Solution = runner.Runner{Runnables: []runner.Runnable{Part1, Part2}}
-
-var inputMonkeys = []Monkey{
-	{
-		Items:       []int{62, 92, 50, 63, 62, 93, 73, 50},
-		Operation:   func(i int) int { return i * 7 },
-		TestDivisor: 2,
-		IfTrue:      7,
-		IfFalse:     1,
-	},
-	{
-		Items:       []int{51, 97, 74, 84, 99},
-		Operation:   func(i int) int { return i + 3 },
-		TestDivisor: 7,
-		IfTrue:      2,
-		IfFalse:     4,
-	},
-	{
-		Items:       []int{98, 86, 62, 76, 51, 81, 95},
-		Operation:   func(i int) int { return i + 4 },
-		TestDivisor: 13,
-		IfTrue:      5,
-		IfFalse:     4,
-	},
-	{
-		Items:       []int{53, 95, 50, 85, 83, 72},
-		Operation:   func(i int) int { return i + 5 },
-		TestDivisor: 19,
-		IfTrue:      6,
-		IfFalse:     0,
-	},
-	{
-		Items:       []int{59, 60, 63, 71},
-		Operation:   func(i int) int { return i * 5 },
-		TestDivisor: 11,
-		IfTrue:      5,
-		IfFalse:     3,
-	},
-	{
-		Items:       []int{92, 65},
-		Operation:   func(i int) int { return i * i },
-		TestDivisor: 5,
-		IfTrue:      6,
-		IfFalse:     3,
-	},
-	{
-		Items:       []int{78},
-		Operation:   func(i int) int { return i + 8 },
-		TestDivisor: 3,
-		IfTrue:      0,
-		IfFalse:     7,
-	},
-	{
-		Items:       []int{84, 93, 54},
-		Operation:   func(i int) int { return i + 1 },
-		TestDivisor: 17,
-		IfTrue:      2,
-		IfFalse:     1,
-	},
-}
 
 type Monkey struct {
 	Items       []int
@@ -109,9 +52,9 @@ func (m Monkey) CheckWorryLevel(item int) int {
 	}
 }
 
-func Part1Monkey(monkeys []Monkey) int {
+func SimulateMonkeys(monkeys []Monkey, iterations int, reductionFunc func(int) int) int {
 	inspectedItems := make([]int, len(monkeys))
-	for i := 0; i < 20; i++ {
+	for i := 0; i < iterations; i++ {
 		for j := 0; j < len(monkeys); j++ {
 			monkey := &monkeys[j]
 			for {
@@ -121,7 +64,7 @@ func Part1Monkey(monkeys []Monkey) int {
 				}
 				item = monkey.InspectItem(item)
 				inspectedItems[j]++
-				item = item / 3 // reduce worry level
+				item = reductionFunc(item)
 				throwTo := monkey.CheckWorryLevel(item)
 				monkeys[throwTo].PushItem(item)
 			}
@@ -139,33 +82,96 @@ func findDivisor(monkeys []Monkey) int {
 	return divisor
 }
 
-func Part2Monkey(monkeys []Monkey) int {
-	inspectedItems := make([]int, len(monkeys))
-	lcm := findDivisor(monkeys)
-	for i := 0; i < 10000; i++ {
-		for j := 0; j < len(monkeys); j++ {
-			monkey := &monkeys[j]
-			for {
-				item, err := monkey.PopItem()
-				if err != nil {
-					break
-				}
-				item = monkey.InspectItem(item)
-				inspectedItems[j]++
-				throwTo := monkey.CheckWorryLevel(item)
-				item = item % lcm
-				monkeys[throwTo].PushItem(item)
-			}
-		}
-	}
-	sort.Ints(inspectedItems)
-	return inspectedItems[len(monkeys)-1] * inspectedItems[len(monkeys)-2]
-}
-
 func Part1(input []byte) (runner.Solution, error) {
-	return runner.Solution{Message: fmt.Sprintf("Monkey Business: %v", Part1Monkey(inputMonkeys))}, nil
+	monkeys, err := Parse(input)
+	return runner.Solution{Message: fmt.Sprintf("Monkey Business: %v", SimulateMonkeys(monkeys, 20, func(i int) int { return i / 3 }))}, err
 }
 
 func Part2(input []byte) (runner.Solution, error) {
-	return runner.Solution{Message: fmt.Sprintf("Monkey Business: %v", Part2Monkey(inputMonkeys))}, nil
+	monkeys, err := Parse(input)
+	multiple := findDivisor(monkeys)
+	return runner.Solution{Message: fmt.Sprintf("Monkey Business: %v", SimulateMonkeys(monkeys, 10000, func(i int) int { return i % multiple }))}, err
+}
+
+func Parse(input []byte) ([]Monkey, error) {
+	monkeys := []Monkey{}
+	prefixStart := "Monkey "
+	prefixStartingItems := "  Starting items: "
+	prefixOperation := "  Operation: new = old "
+	prefixTest := "  Test: divisible by "
+	prefixIfTrue := "    If true: throw to monkey "
+	prefixIfFalse := "    If false: throw to monkey "
+
+	var curMonkey Monkey
+	for _, l := range strings.Split(string(input), "\n")[1:] {
+		switch {
+		case strings.HasPrefix(l, prefixStart):
+			monkeys = append(monkeys, curMonkey)
+			curMonkey = Monkey{}
+		case strings.HasPrefix(l, prefixStartingItems):
+			items := strings.Split(l[len(prefixStartingItems):], ", ")
+			for _, i := range items {
+				asInt, err := strconv.Atoi(i)
+				if err != nil {
+					return monkeys, nil
+				}
+				curMonkey.Items = append(curMonkey.Items, asInt)
+			}
+		case strings.HasPrefix(l, prefixOperation):
+			wihoutPrefix := l[len(prefixOperation):]
+			noNum := false
+			var num int
+			if strings.HasSuffix(wihoutPrefix, "old") {
+				noNum = true
+			} else {
+				var err error
+				num, err = strconv.Atoi(wihoutPrefix[2:])
+				if err != nil {
+					return monkeys, err
+				}
+			}
+			switch wihoutPrefix[0] {
+			case '+':
+				if noNum {
+					curMonkey.Operation = func(i int) int {
+						return i + i
+					}
+				} else {
+					curMonkey.Operation = func(i int) int {
+						return i + num
+					}
+				}
+			case '*':
+				if noNum {
+					curMonkey.Operation = func(i int) int {
+						return i * i
+					}
+				} else {
+					curMonkey.Operation = func(i int) int {
+						return i * num
+					}
+				}
+			}
+		case strings.HasPrefix(l, prefixTest):
+			divisor, err := strconv.Atoi(l[len(prefixTest):])
+			if err != nil {
+				return monkeys, err
+			}
+			curMonkey.TestDivisor = divisor
+		case strings.HasPrefix(l, prefixIfTrue):
+			trueThrow, err := strconv.Atoi(l[len(prefixIfTrue):])
+			if err != nil {
+				return monkeys, err
+			}
+			curMonkey.IfTrue = trueThrow
+		case strings.HasPrefix(l, prefixIfFalse):
+			falseThrow, err := strconv.Atoi(l[len(prefixIfFalse):])
+			if err != nil {
+				return monkeys, err
+			}
+			curMonkey.IfFalse = falseThrow
+		}
+	}
+	monkeys = append(monkeys, curMonkey)
+	return monkeys, nil
 }
