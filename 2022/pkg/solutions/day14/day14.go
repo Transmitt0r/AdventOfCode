@@ -20,7 +20,6 @@ const (
 	Sand        Material = '+'
 	SettledSand Material = 'o'
 	OutOfBounds Material = 'x'
-	FloorOffset          = 2
 )
 
 var (
@@ -112,28 +111,6 @@ topLoop:
 		}
 		p.AddSand(sandCorn)
 		sandCounter++
-	}
-
-	return sandCounter
-}
-
-func (p *Plot) Simulate2() int {
-	sandEntryPoint := Point{500, 0}
-	sandCounter := 0
-
-topLoop:
-	for {
-		sandCorn := sandEntryPoint
-		canMove := true
-		var err error
-		for canMove {
-			canMove, err = p.move(&sandCorn)
-			if err != nil {
-				break topLoop
-			}
-		}
-		p.AddSand(sandCorn)
-		sandCounter++
 		if sandCorn == sandEntryPoint {
 			break
 		}
@@ -145,7 +122,7 @@ topLoop:
 func Part1(input []byte) (runner.Solution, error) {
 	insts := Parse(input)
 	min, max := FindLimits(insts)
-	plot := NewPlotPart1(min, max)
+	plot := NewPlot(min, max, 0)
 	for _, inst := range insts {
 		plot.Draw(inst)
 	}
@@ -156,12 +133,14 @@ func Part1(input []byte) (runner.Solution, error) {
 func Part2(input []byte) (runner.Solution, error) {
 	insts := Parse(input)
 	min, max := FindLimits(insts)
-	plot := NewPlotPart2(min, max)
+	min.X = 0
+	max.X = max.X * 2
+	plot := NewPlot(min, max, 2)
 	for _, inst := range insts {
 		plot.Draw(inst)
 	}
 	plot.Render()
-	res := plot.Simulate2()
+	res := plot.Simulate()
 	return runner.Solution{Message: fmt.Sprintf("Units of sand until hole is plugged: %v", res)}, nil
 }
 
@@ -205,37 +184,20 @@ func FindLimits(insts []Instruction) (Point, Point) {
 	return min, max
 }
 
-func NewPlotPart1(min, max Point) Plot {
+func NewPlot(min, max Point, floorOffset int) Plot {
 	newPlot := Plot{}
 	newPlot.Offset = min
 	newPlot.Offset.Y = 0
-	newPlot.plot = make([][]Material, max.Y+1)
+	newPlot.plot = make([][]Material, max.Y+1+floorOffset)
 	for y := 0; y < len(newPlot.plot); y++ {
 		newPlot.plot[y] = make([]Material, max.X-newPlot.Offset.X+1)
 		for x := 0; x < len(newPlot.plot[y]); x++ {
-			newPlot.plot[y][x] = Air
-		}
-	}
-	return newPlot
-}
-
-func NewPlotPart2(min, max Point) Plot {
-	newPlot := Plot{}
-	newPlot.Offset = min
-	newPlot.Offset.Y = 0
-	newPlot.Offset.X = 0
-	newPlot.plot = make([][]Material, max.Y+1+FloorOffset)
-	for y := 0; y < len(newPlot.plot); y++ {
-		newPlot.plot[y] = make([]Material, (max.X-newPlot.Offset.X+1)*2)
-		for x := 0; x < len(newPlot.plot[y]); x++ {
-			if y == len(newPlot.plot)-1 {
-				newPlot.plot[y][x] = Rock
-			} else {
-				newPlot.plot[y][x] = Air
+			mat := Air
+			if floorOffset > 0 && y == len(newPlot.plot)-1 {
+				mat = Rock
 			}
-
+			newPlot.plot[y][x] = mat
 		}
-
 	}
 	return newPlot
 }

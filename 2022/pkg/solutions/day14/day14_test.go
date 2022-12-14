@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 	if min != minExp || max != maxExp {
 		t.Error("Unexpected Limits")
 	}
-	plot := day14.NewPlotPart1(min, max)
+	plot := day14.NewPlot(min, max, 0)
 	for _, inst := range insts {
 		plot.Draw(inst)
 	}
