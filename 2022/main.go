@@ -22,6 +22,7 @@ import (
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day12"
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day13"
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day14"
+	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day15"
 )
 
 var (
@@ -62,6 +63,7 @@ func main() {
 		12: day12.Solution,
 		13: day13.Solution,
 		14: day14.Solution,
+		15: day15.Solution,
 	}
 	if _, ok := days[*day]; !ok {
 		log.Fatalln("Selected invalid day!")
