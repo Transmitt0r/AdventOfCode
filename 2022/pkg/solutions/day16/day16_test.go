@@ -3,7 +3,6 @@ package day16_test
 import (
 	"testing"
 
-	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day15"
 	"github.com/Transmitt0r/AdventOfCode/2022/pkg/solutions/day16"
 )
 
@@ -29,11 +28,11 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	sol, err := day15.Part2(sampleInput)
+	sol, err := day16.Part2(sampleInput)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
-	if sol.Message != "Tuning frequency: 56000011" {
+	if sol.Message != "Maximum pressure release: 1707" {
 		t.Errorf("Wrong solution %v", sol)
 	}
 }
