@@ -15,20 +15,26 @@ var Solution = runner.Runner{Runnables: []runner.Runnable{Part1, Part2}}
 type ValveName string
 type Flow int
 
-func solveRecursively(reachabilityMatrix map[ValveName]map[ValveName]int, flowMap map[ValveName]Flow, currentTime int, currentPressure int, currentFlow int, currentTunnel ValveName, remaining []ValveName, timeLimit int) int {
-	scoreIfNoOtherValvesOpenUp := currentPressure + (timeLimit-currentTime)*currentFlow
+type CaveSystem struct {
+	ReachabilityMatrix map[ValveName]map[ValveName]int
+	FlowMap            map[ValveName]Flow
+	TimeLimit          int
+}
+
+func (c CaveSystem) solveRecursively(currentTime int, currentPressure int, currentFlow int, currentValve ValveName, remaining []ValveName) int {
+	scoreIfNoOtherValvesOpenUp := currentPressure + (c.TimeLimit-currentTime)*currentFlow
 	max := scoreIfNoOtherValvesOpenUp
 
 	for _, v := range remaining {
-		timeToReachAndOpen := reachabilityMatrix[currentTunnel][v] + 1
-		if currentTime+timeToReachAndOpen < timeLimit {
-			newTime := currentTime + timeToReachAndOpen
-			newPressure := currentPressure + timeToReachAndOpen*currentFlow
-			newFlow := currentFlow + int(flowMap[v])
-			possibleScore := solveRecursively(reachabilityMatrix, flowMap, newTime, newPressure, newFlow, v, removeFromList(remaining, v), timeLimit)
-			if possibleScore > max {
-				max = possibleScore
-			}
+		timeToReachAndOpen := c.ReachabilityMatrix[currentValve][v] + 1
+		if currentTime+timeToReachAndOpen >= c.TimeLimit {
+			continue
+		}
+		newPressure := currentPressure + timeToReachAndOpen*currentFlow
+		newFlow := currentFlow + int(c.FlowMap[v])
+		possibleScore := c.solveRecursively(currentTime+timeToReachAndOpen, newPressure, newFlow, v, removeFromList(remaining, v))
+		if possibleScore > max {
+			max = possibleScore
 		}
 	}
 
@@ -54,7 +60,8 @@ func Part1(input []byte) (runner.Solution, error) {
 		}
 	}
 	reachabilityMatrix := ReachabilityList(adjacencyList)
-	maxPressure := solveRecursively(reachabilityMatrix, flowMap, 0, 0, 0, ValveName("AA"), toCheck, 30)
+	cave := CaveSystem{reachabilityMatrix, flowMap, 30}
+	maxPressure := cave.solveRecursively(0, 0, 0, ValveName("AA"), toCheck)
 	return runner.Solution{Message: fmt.Sprintf("Maximum pressure release: %v", maxPressure)}, nil
 }
 
@@ -84,7 +91,7 @@ func Parse(input []byte) (map[ValveName][]ValveName, map[ValveName]Flow) {
 
 func ReachabilityList(adjacencyList map[ValveName][]ValveName) map[ValveName]map[ValveName]int {
 	res := map[ValveName]map[ValveName]int{}
-	for start, _ := range adjacencyList {
+	for start := range adjacencyList {
 		res[start] = Dijkstra(adjacencyList, start)
 	}
 
